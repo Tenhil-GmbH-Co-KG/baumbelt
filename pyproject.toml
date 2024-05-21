@@ -1,0 +1,36 @@
+[project]
+name = "pyutils3"
+version = "0.1.0"
+authors = [
+    { name = "Watte" },
+]
+description = "A collection of Python utility functions"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/Tenhil-GmbH-Co-KG/pyutils"
+Issues = "https://github.com/Tenhil-GmbH-Co-KG/pyutils/issues"
+
+[project.optional-dependencies]
+dev = [
+    "black==24.4.2",
+    "build==1.2.1",
+    "pytest==8.2.1",
+    "twine==5.1.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 120

@@ -1,2 +1,78 @@
-# pyutils
+# pyutils3
+
 Curated collection of handy utility functions for Python
+
+# Utilities
+
+## EnumContainsMeta
+
+`pyutils3.enum.EnumContainsMeta` offers a meta class, that adds the syntactic sugar of member checks. The default `Enum` only allows checks for values:
+
+```python
+from enum import Enum
+from pyutils3.enum import EnumContainsMeta
+
+
+class AtomEnum(Enum, metaclass=EnumContainsMeta):
+    hydrogen = 1
+    helium = 2
+
+
+"hydrogen" in AtomEnum  # True
+2 in AtomEnum  # True
+"water" in AtomEnum  # False
+```
+
+## MeasureTime
+
+The `pyutils3.time.MeasureTime` class can be used as a context manager to have a syntactically nice way to measure the time a block of code takes.
+The following two snippets produce the same result.
+
+Vanilla:
+
+```python
+from datetime import datetime
+
+t0 = datetime.now()
+this_call_takes_a_while()
+tend = datetime.now() - t0
+
+print(f"{tend} ({tend.total_seconds()}s)")
+```
+
+and with `MeasureTime`:
+
+```python
+from pyutils.time import MeasureTime
+
+with MeasureTime() as mt:
+    this_call_takes_a_while()
+    print(mt)
+```
+
+## HuggingLog
+
+`pyutils3.logging.HuggingLog` offers a convenient way to print the duration a specific code block took. It utilizes [MeasureTime](#measuretime) and adds a bit of printing around it. You can also pass
+a different logging function, for instance `logger.debug`. This comes especially comes in handy, if you run in detached environment (eg: cronjob).
+
+```python
+from pyutils3.logging import HuggingLog
+import logging
+
+logger = logging.getLogger(__name__)
+
+with HuggingLog("cross-compile doom", logging_fn=logger.debug, prefix="[ARM]"):
+    # compile hard
+    ...
+```
+
+This outputs something like:
+
+```
+(2629) [DEBUG] 2024-05-28 14:49:51,616 - logging#32 - [ARM]: Start  'cross-compile doom'...
+(2629) [DEBUG] 2024-05-28 14:49:53,616 - logging#41 - [ARM]: Finish 'cross-compile doom' in 0:00:02.000204 (2.000204s total)
+```
+
+> Vigilant readers may notice the log-origin "logging#32" and "logging#41". These origins are from inside the utility and probably not very useful. You can circumvent this by passing a lambda:
+> 
+> `with HuggingLog(..., logging_fn=lambda s: logger.debug(s)):`
