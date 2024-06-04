@@ -1,10 +1,10 @@
 [project]
-name = "pyutils3"
+name = "baumbelt"
 version = "0.1.0"
 authors = [
     { name = "Watte" },
 ]
-description = "A collection of Python utility functions"
+description = "A collection of Python utility functions by Tenhil GmbH & Co. KG"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -17,8 +17,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Tenhil-GmbH-Co-KG/pyutils"
-Issues = "https://github.com/Tenhil-GmbH-Co-KG/pyutils/issues"
+Homepage = "https://github.com/Tenhil-GmbH-Co-KG/baumbelt"
+Issues = "https://github.com/Tenhil-GmbH-Co-KG/baumbelt/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -27,10 +27,16 @@ dev = [
     "pytest==8.2.1",
     "twine==5.1.0"
 ]
+django = [
+    "django==5.0.6"
+]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/baumbelt"]
 
 [tool.black]
 line-length = 120

@@ -2,7 +2,7 @@ import contextlib
 import io
 from unittest import TestCase
 
-from pyutils3.logging import HuggingLog
+from baumbelt.logging import HuggingLog
 from tests.utils import strip_duration_and_seconds
 
 
