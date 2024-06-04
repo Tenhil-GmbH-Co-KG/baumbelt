@@ -1,0 +1,35 @@
+name: Publish to PyPI 📦
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/test.yml@github-actions-release
+
+  build:
+    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/build.yml@github-actions-release
+
+  publish-to-pypi:
+    name: Publish on PyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/baumbelt
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
