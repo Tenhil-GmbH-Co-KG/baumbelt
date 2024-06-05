@@ -81,3 +81,27 @@ This outputs something like:
 >
 > `with HuggingLog(..., logging_fn=lambda s: logger.debug(s)):`
 
+## group_by_key
+
+`baumbelt.grouping.group_by_key` is a little utility to group a given iterable by an attribute of its items.
+
+```python
+iterable = [
+    date(2020, 1, 1),
+    date(2021, 2, 2),
+    date(2022, 3, 3),
+    date(2023, 4, 4),
+]
+
+grouped = group_by_key(iterable, "weekday")
+
+grouped == {
+    1: [date(2021, 2, 2), date(2023, 4, 4)],
+    2: [date(2020, 1, 1)],
+    3: [date(2022, 3, 3)],
+}
+```
+
+The passed *attribute_name* can also be a callable (like `date.weekday()`) or just an attribute (like `date.day`).
+
+> There exists `itertools.groupby`, but it would return iterators that may are undesired.
