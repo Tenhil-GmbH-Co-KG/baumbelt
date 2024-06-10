@@ -7,10 +7,10 @@ on:
 
 jobs:
   test:
-    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/test.yml@github-actions-release
+    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/test.yml@main
 
   build:
-    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/build.yml@github-actions-release
+    uses: Tenhil-GmbH-Co-KG/baumbelt/.github/workflows/build.yml@main
 
   publish-to-pypi:
     name: Publish on PyPI
