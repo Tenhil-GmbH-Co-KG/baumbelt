@@ -8,6 +8,10 @@ Run `pip install baumbelt`
 
 # Utilities
 
+`baumbelt` contains a bunch of different vanilla and Django-specific helpers. If you don't
+have Django installed, you still can use the vanilla ones. Everthing imported from `baumbelt.django`
+assumes Django to be installed.
+
 ## EnumContainsMeta
 
 `baumbelt.enum.EnumContainsMeta` offers a metaclass, that adds the syntactic sugar of member checks. The default `Enum` only allows checks for values:
@@ -55,6 +59,7 @@ with MeasureTime() as mt:
 ```
 
 ## Timer
+
 `baumbelt.time.timer` is a more flexible utility compared to `MeasureTime`. It additionally allows to *tap* the current time.\
 This snippet:
 
@@ -99,7 +104,6 @@ v'main' started...
 ʌ'main' took 3.4212s
 ```
 
-
 ## HuggingLog
 
 `baumbelt.logging.HuggingLog` offers a convenient way to print the duration a specific code block took. It utilizes [MeasureTime](#measuretime) and adds a bit of printing around it. You can also pass
@@ -123,7 +127,8 @@ This outputs something like:
 (2629) [DEBUG] 2024-05-28 14:49:53,616 - logging#41 - [ARM]: Finish 'cross-compile doom' in 0:00:02.000204 (2.000204s total)
 ```
 
-> Vigilant readers may notice the log-origin "logging#32" and "logging#41". These origins are from inside the utility and probably not very useful. You can circumvent this by passing a lambda:
+> Vigilant readers may notice the log-origin "logging#32" and "logging#41". These origins are from inside the utility and probably not very useful. 
+> You can circumvent this by passing a lambda:
 >
 > `with HuggingLog(..., logging_fn=lambda s: logger.debug(s)):`
 
@@ -151,3 +156,49 @@ grouped == {
 The passed *attribute_name* can also be a callable (like `date.weekday()`) or just an attribute (like `date.day`).
 
 > There exists `itertools.groupby`, but it would return iterators that may are undesired.
+
+## count_queries [Django]
+
+When developing apps in Django, you often find yourself hunting for performance bottlenecks. Or maybe just
+want to get an overview how many DB calls are actually fired from a certain view. Thats what `count_queries` does:
+
+```python
+with count_queries(name="setup"):
+    author, _ = Author.objects.get_or_create(name='Martin Heidegger')
+    book, _ = Book.objects.get_or_create(title='Sein und Zeit', author=author)
+
+with count_queries(name="count"):
+    num_authors = Author.objects.count()
+```
+
+This outputs:
+
+```text
+'setup' took 2 / 2 queries
+'count' took 1 / 3 queries
+```
+
+If you use a multiple database setup, or just don't happen to have your DB named `default`, you can pass
+the `db_name` argument to `count_queries`.
+
+## django_sql_debug [Django]
+
+Often it is not just enough knowing how many queries are made, but also which ones exactly. And how long each takes. Django offers
+to log queries and their runtimes via the `logging` framework. But you often end up with way too much noise. This is where
+`django_sql_debug` aims to help. By activating the SQL logs only inside the context manager, you can focus on the queries
+you actually want to see.
+
+```python
+with django_sql_debug():
+    author, _ = Author.objects.get_or_create(name='Martin Heidegger')
+    book, _ = Book.objects.get_or_create(title='Sein und Zeit', author=author)
+```
+
+```text
+(0.000) SELECT "myapp_author"."id", "myapp_author"."name" FROM "myapp_author" WHERE "myapp_author"."name" = 'Martin Heidegger' LIMIT 21; args=('Martin Heidegger',); alias=default
+(0.000) SELECT "myapp_book"."id", "myapp_book"."title", "myapp_book"."author_id" FROM "myapp_book" WHERE ("myapp_book"."author_id" = 1 AND "myapp_book"."title" = 'Sein und Zeit') LIMIT 21; args=(1, 'Sein und Zeit'); alias=default
+(0.000) SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
+```
+
+The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production. 
+It may alters your own logging configuration in a way neither you nor us is expecting :)
