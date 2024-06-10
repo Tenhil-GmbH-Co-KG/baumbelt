@@ -54,6 +54,52 @@ with MeasureTime() as mt:
     print(mt)
 ```
 
+## Timer
+`baumbelt.time.timer` is a more flexible utility compared to `MeasureTime`. It additionally allows to *tap* the current time.\
+This snippet:
+
+```python
+def fetch_raw_data():
+    with Timer("fetch_raw_data") as t:
+        time.sleep(0.8)
+        t.tap("got users")
+        time.sleep(2)
+        t.tap("got events")
+        time.sleep(0.5)
+
+
+def enrich_data():
+    with Timer("enrich_data", resolution="ms") as t:
+        time.sleep(0.1)
+        t.tap("enriched-step-1")
+        time.sleep(0.02)
+        t.tap("enriched-step-2")
+
+
+with Timer("main") as t:
+    fetch_raw_data()
+
+    t.tap("enriching..")
+    enrich_data()
+```
+
+produces the following output:
+
+```text
+v'main' started...
+  v'fetch_raw_data' started...
+    > 'got users'                              took 0.8002s (at 0.8002s)
+    > 'got events'                             took 2.0003s (at 2.8005s)
+  ʌ'fetch_raw_data' took 3.3008s
+  > 'enriching..'                            took 3.3009s (at 3.3009s)
+  v'enrich_data' started...
+    > 'enriched-step-1'                        took 100.1561ms (at 100.1561ms)
+    > 'enriched-step-2'                        took 20.1433ms (at 120.2993ms)
+  ʌ'enrich_data' took 120.3260ms
+ʌ'main' took 3.4212s
+```
+
+
 ## HuggingLog
 
 `baumbelt.logging.HuggingLog` offers a convenient way to print the duration a specific code block took. It utilizes [MeasureTime](#measuretime) and adds a bit of printing around it. You can also pass
