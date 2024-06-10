@@ -1,16 +1,20 @@
 # baumbelt
 
-Curated collection of handy utility functions for Python by the Tenhil GmbH.
+This is a collection of utilities we, at Tenhil, find useful when developing in Python or specifically Django.
+`baumbelt` is an acronym for:
+
+**B**asic **A**uxiliary **U**tility **M**ethods tool**belt**.
+
+Also, *Baum* is the german word for *trees*, and we happen to just like them. A lot.
 
 # Installation
 
-Run `pip install baumbelt`
+`pip install baumbelt`
 
 # Utilities
 
-`baumbelt` contains a bunch of different vanilla and Django-specific helpers. If you don't
-have Django installed, you still can use the vanilla ones. Everthing imported from `baumbelt.django`
-assumes Django to be installed.
+`baumbelt` contains both python- and django-specific utilities. If you don't have Django installed, you still can use the vanilla Python utilities.
+Everything imported from `baumbelt.django` assumes Django to be installed.
 
 ## EnumContainsMeta
 
@@ -33,7 +37,7 @@ class AtomEnum(Enum, metaclass=EnumContainsMeta):
 
 ## MeasureTime
 
-The `baumbelt.time.MeasureTime` class can be used as a context manager to have a syntactically nice way to measure the time a block of code takes.
+The `baumbelt.time.MeasureTime` class can be used as a context manager to have a syntactically appealing way to measure the time a block of code takes.
 The following two snippets produce the same result.
 
 Vanilla:
@@ -46,9 +50,10 @@ this_call_takes_a_while()
 tend = datetime.now() - t0
 
 print(f"{tend} ({tend.total_seconds()}s)")
+
 ```
 
-and with `MeasureTime`:
+`MeasureTime`:
 
 ```python
 from baumbelt.time import MeasureTime
@@ -64,6 +69,9 @@ with MeasureTime() as mt:
 This snippet:
 
 ```python
+from baumbelt.time import Timer
+
+
 def fetch_raw_data():
     with Timer("fetch_raw_data") as t:
         time.sleep(0.8)
@@ -86,6 +94,7 @@ with Timer("main") as t:
 
     t.tap("enriching..")
     enrich_data()
+
 ```
 
 produces the following output:
@@ -106,8 +115,9 @@ v'main' started...
 
 ## HuggingLog
 
-`baumbelt.logging.HuggingLog` offers a convenient way to print the duration a specific code block took. It utilizes [MeasureTime](#measuretime) and adds a bit of printing around it. You can also pass
-a different logging function, for instance `logger.debug`. This comes especially comes in handy, if you run in detached environment (eg: cronjob).
+`baumbelt.logging.HuggingLog` offers a convenient way to print the duration a specific code block took to complete. It utilizes [MeasureTime](#measuretime)
+and adds a bit of printing around it. You can also pass a different logging function, for instance `logger.debug`.
+This especially comes in handy, if your code runs in detached environments (e.g. cronjobs).
 
 ```python
 from baumbelt.logging import HuggingLog
@@ -118,6 +128,7 @@ logger = logging.getLogger(__name__)
 with HuggingLog("cross-compile doom", logging_fn=logger.debug, prefix="[ARM]"):
     # compile hard
     ...
+
 ```
 
 This outputs something like:
@@ -127,8 +138,8 @@ This outputs something like:
 (2629) [DEBUG] 2024-05-28 14:49:53,616 - logging#41 - [ARM]: Finish 'cross-compile doom' in 0:00:02.000204 (2.000204s total)
 ```
 
-> Vigilant readers may notice the log-origin "logging#32" and "logging#41". These origins are from inside the utility and probably not very useful. 
-> You can circumvent this by passing a lambda:
+> Vigilant readers may notice the log-origin "logging#32" and "logging#41". These places originate from inside the utility and dont add useful context.
+> A way to circumvent this is to pass a lambda:
 >
 > `with HuggingLog(..., logging_fn=lambda s: logger.debug(s)):`
 
@@ -137,6 +148,8 @@ This outputs something like:
 `baumbelt.grouping.group_by_key` is a little utility to group a given iterable by an attribute of its items.
 
 ```python
+from baumbelt.grouping import group_by_key
+
 iterable = [
     date(2020, 1, 1),
     date(2021, 2, 2),
@@ -155,17 +168,19 @@ grouped == {
 
 The passed *attribute_name* can also be a callable (like `date.weekday()`) or just an attribute (like `date.day`).
 
-> There exists `itertools.groupby`, but it would return iterators that may are undesired.
+> There exists `itertools.groupby`, but it would return iterators that may be undesired.
 
 ## count_queries [Django]
 
 When developing apps in Django, you often find yourself hunting for performance bottlenecks. Or maybe just
-want to get an overview how many DB calls are actually fired from a certain view. Thats what `count_queries` does:
+want to get an overview of how many DB calls are actually fired in a certain context. That's what `count_queries` does:
 
 ```python
+from baumbelt.django.sql import count_queries
+
 with count_queries(name="setup"):
-    author, _ = Author.objects.get_or_create(name='Martin Heidegger')
-    book, _ = Book.objects.get_or_create(title='Sein und Zeit', author=author)
+    author, _ = Author.objects.get_or_create(name="Martin Heidegger")
+    book, _ = Book.objects.get_or_create(title="Sein und Zeit", author=author)
 
 with count_queries(name="count"):
     num_authors = Author.objects.count()
@@ -183,15 +198,18 @@ the `db_name` argument to `count_queries`.
 
 ## django_sql_debug [Django]
 
-Often it is not just enough knowing how many queries are made, but also which ones exactly. And how long each takes. Django offers
+Often it is not just enough to know how many queries are made. You want to know which queries are made exactly and how long each takes. Django offers
 to log queries and their runtimes via the `logging` framework. But you often end up with way too much noise. This is where
-`django_sql_debug` aims to help. By activating the SQL logs only inside the context manager, you can focus on the queries
+`django_sql_debug` aims to help. By activating the SQL logs exclusively inside the context manager, you can focus on the queries
 you actually want to see.
 
 ```python
+from baumbelt.django.sql import django_sql_debug
+
 with django_sql_debug():
-    author, _ = Author.objects.get_or_create(name='Martin Heidegger')
-    book, _ = Book.objects.get_or_create(title='Sein und Zeit', author=author)
+    author, _ = Author.objects.get_or_create(name="Martin Heidegger")
+    book, _ = Book.objects.get_or_create(title="Sein und Zeit", author=author)
+
 ```
 
 ```text
@@ -200,5 +218,5 @@ with django_sql_debug():
 (0.000) SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
 ```
 
-The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production. 
+The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production.
 It may alters your own logging configuration in a way neither you nor us is expecting :)
