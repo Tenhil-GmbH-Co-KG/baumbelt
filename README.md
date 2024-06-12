@@ -69,6 +69,7 @@ with MeasureTime() as mt:
 This snippet:
 
 ```python
+import time
 from baumbelt.time import Timer
 
 
@@ -120,8 +121,8 @@ and adds a bit of printing around it. You can also pass a different logging func
 This especially comes in handy, if your code runs in detached environments (e.g. cronjobs).
 
 ```python
-from baumbelt.logging import HuggingLog
 import logging
+from baumbelt.logging import HuggingLog
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +149,7 @@ This outputs something like:
 `baumbelt.grouping.group_by_key` is a little utility to group a given iterable by an attribute of its items.
 
 ```python
+from datetime import date
 from baumbelt.grouping import group_by_key
 
 iterable = [
@@ -218,5 +220,27 @@ with django_sql_debug():
 (0.000) SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
 ```
 
-The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production.
-It may alters your own logging configuration in a way neither you nor us is expecting :)
+> The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production.
+> It may alter your own logging configuration in a way neither you nor us is expecting :)
+
+`django_sql_debug` also accepts some arguments to control how the SQL should be presented:
+
+- `indent`: Boolean to control if the SQL should be reindented. Default is `True`
+
+
+- `max_arguments`: Integer to control how many arguments in an `IN` clause are displayed. Default is `5`. Set to `-1` to disable argument cutting.
+  If there are less than 4 arguments, no truncation is done.
+
+In this example, the SQL is not indented, and the arguments are limited to 5:
+
+```sql
+SELECT "myapp_author"."id",
+       "myapp_author"."name"
+FROM "myapp_author"
+WHERE "myapp_author"."id" IN (0,
+                              1,
+                              2,
+                              3,
+                              /* 5 truncated */
+                              9)
+```
