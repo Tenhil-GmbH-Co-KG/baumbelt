@@ -201,8 +201,9 @@ the `db_name` argument to `count_queries`.
 ## django_sql_debug [Django]
 
 Often it is not just enough to know how many queries are made. You want to know which queries are made exactly and how long each takes. Django offers
-to log queries and their runtimes via the `logging` framework. But you often end up with way too much noise. This is where
-`django_sql_debug` aims to help. By activating the SQL logs exclusively inside the context manager, you can focus on the queries
+to log queries and their runtimes via the `logging` framework. But you often end up with way too much noise.
+
+This is where `django_sql_debug` aims to help. By activating the SQL logs exclusively inside the context manager, you can focus on the queries
 you actually want to see.
 
 ```python
