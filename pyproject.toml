@@ -1,8 +1,8 @@
 [project]
 name = "baumbelt"
-version = "0.1.5"
+version = "0.2.0"
 authors = [
-    { name = "Watte" },
+    { name = "Watte", email = "python@tenhil.de" },
 ]
 description = "A collection of Python utility functions by Tenhil GmbH & Co. KG"
 readme = "README.md"
