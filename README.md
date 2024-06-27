@@ -74,7 +74,7 @@ from baumbelt.time import Timer
 
 
 def fetch_raw_data():
-    with Timer("fetch_raw_data") as t:
+    with Timer() as t:
         time.sleep(0.8)
         t.tap("got users")
         time.sleep(2)
@@ -101,18 +101,20 @@ with Timer("main") as t:
 produces the following output:
 
 ```text
-v'main' started...
-  v'fetch_raw_data' started...
+v 'main' started...
+  v 'fetch_raw_data' started...
     > 'got users'                              took 0.8002s (at 0.8002s)
     > 'got events'                             took 2.0003s (at 2.8005s)
-  ʌ'fetch_raw_data' took 3.3008s
+  ʌ 'fetch_raw_data' took 3.3008s
   > 'enriching..'                            took 3.3009s (at 3.3009s)
-  v'enrich_data' started...
+  v 'enrich_data' started...
     > 'enriched-step-1'                        took 100.1561ms (at 100.1561ms)
     > 'enriched-step-2'                        took 20.1433ms (at 120.2993ms)
-  ʌ'enrich_data' took 120.3260ms
-ʌ'main' took 3.4212s
+  ʌ 'enrich_data' took 120.3260ms
+ʌ 'main' took 3.4212s
 ```
+
+If you don't pass a `name` to `Timer()`, it will use the `inspect` package to find the caller function's name.
 
 ## HuggingLog
 

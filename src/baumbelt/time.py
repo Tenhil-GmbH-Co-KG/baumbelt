@@ -1,3 +1,4 @@
+import inspect
 import time
 from datetime import timedelta, datetime
 
@@ -27,7 +28,11 @@ class Timer:
     cgreen = "\33[32m"
     cgrey = "\33[90m"
 
-    def __init__(self, name: str, resolution="s", disable=0):
+    def __init__(self, name: str = None, resolution="s", disable=0):
+        if name is None:
+            frame, filename, line_number, function_name, lines, index = inspect.stack()[1]
+            name = function_name
+
         self.name = name
         self.resolution = resolution
         self.disable = disable
@@ -47,7 +52,7 @@ class Timer:
         if self.disable:
             return self
 
-        msg = f"{self._get_padding()}v'{self.name}' started..."
+        msg = f"{self._get_padding()}v '{self.name}' started..."
         print(f"{self.cgreen}{msg}{self.creset}")
         self.start = time.time()
         self.last_tap = self.start
@@ -76,6 +81,7 @@ class Timer:
 
         end = time.time()
         duration = end - self.start
+        self.total = duration
         duration, unit = self._convert_to_resolution(duration)
 
         msg = f"{self._get_padding()}ʌ'{self.name}' took {duration:.4f}{unit}"
