@@ -11,6 +11,9 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers import SqlLexer
 from sqlparse.sql import Parenthesis, IdentifierList, Identifier
 
+MAX_CHARS_TO_PARSE = 5_000
+UNPARSED_CHARS_TO_PRINT = 400
+
 
 class SqlFormatter(logging.Formatter):
     do_indent: bool
@@ -22,13 +25,21 @@ class SqlFormatter(logging.Formatter):
 
         self.do_indent = constants.get("indent", False)
         self.max_arguments = constants.get("max_arguments", 5)
+        self.truncate_unparsable = constants.get("truncate_unparsable", True)
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord):
         sql = record.__dict__.get("sql")
         duration = record.__dict__.get("duration")
 
         if sql is None or duration is None:
             return super().format(record)
+
+        sql_length = len(sql)
+        if sql_length > MAX_CHARS_TO_PARSE:
+            if self.truncate_unparsable:
+                sql = f"{sql[:UNPARSED_CHARS_TO_PRINT]} <{sql_length - UNPARSED_CHARS_TO_PRINT} chars hidden>"
+
+            return f"({duration:.2f}s) {sql}"
 
         formatted = sqlparse.format(sql, reindent=self.do_indent)
         if self.max_arguments >= 0:
@@ -101,7 +112,7 @@ class SqlFormatter(logging.Formatter):
         return " ".join(modified_statements)
 
 
-def _setup_initial_logging(indent: bool, max_arguments: int):
+def _setup_initial_logging(indent: bool, max_arguments: int, truncate_unparsable: bool):
     if not settings.LOGGING:
         settings.LOGGING = {}
 
@@ -131,17 +142,20 @@ def _setup_initial_logging(indent: bool, max_arguments: int):
         "constants": {
             "indent": indent,
             "max_arguments": max_arguments,
+            "truncate_unparsable": truncate_unparsable,
         },
     }
 
 
 @contextlib.contextmanager
-def django_sql_debug(disable: bool = False, indent: bool = False, max_arguments: int = 5):
+def django_sql_debug(
+    disable: bool = False, indent: bool = False, max_arguments: int = 5, truncate_unparsable: bool = True
+):
     if disable:
         yield
         return
 
-    _setup_initial_logging(indent=indent, max_arguments=max_arguments)
+    _setup_initial_logging(indent=indent, max_arguments=max_arguments, truncate_unparsable=truncate_unparsable)
 
     prev_disable_existing = settings.LOGGING.get("disable_existing_loggers")
     settings.LOGGING["disable_existing_loggers"] = True

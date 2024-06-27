@@ -234,7 +234,11 @@ with django_sql_debug():
 - `max_arguments`: Integer to control how many arguments in an `IN` clause are displayed. Default is `5`. Set to `-1` to disable argument cutting.
   If there are less than 4 arguments, no truncation is done.
 
-In this example, the SQL is not indented, and the arguments are limited to 5:
+
+- `truncate_unparsable`: Boolean, default `True`. If a query gets too long to be parsed in reasonable time (for formatting and syntax highlights), we
+  will just trim it and display it the default way. So no formatting or colors. But if you really want to see the whole query, you can force that.
+
+In this example, the SQL is indented, and the arguments are limited to 5:
 
 ```sql
 SELECT "myapp_author"."id",
