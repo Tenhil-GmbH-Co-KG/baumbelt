@@ -116,6 +116,29 @@ v 'main' started...
 
 If you don't pass a `name` to `Timer()`, it will use the `inspect` package to find the caller function's name.
 
+
+### Query Support
+When Django is available, the `Timer` will also track the queries fired per block. Given this example code:
+
+```python
+with Timer(resolution="s") as t:
+    author, _ = Author.objects.get_or_create(name="Martin Heidegger")
+    t.tap("author")
+    book, _ = Book.objects.get_or_create(title="Sein und Zeit", author=author)
+    t.tap("book")
+```
+
+it will yield this output:
+
+```text
+v 'handle' started...
+ > 'author'                      took 0.0060s (at 0.0060s), had 4 queries
+ > 'book'                        took 0.0063s (at 0.0122s), had 4 queries
+ʌ'handle' took 0.0122s, had 8 queries
+```
+
+If you don't want this, pass `disable_queries=True` to `Timer()`. 
+
 ## HuggingLog
 
 `baumbelt.logging.HuggingLog` offers a convenient way to print the duration a specific code block took to complete. It utilizes [MeasureTime](#measuretime)
