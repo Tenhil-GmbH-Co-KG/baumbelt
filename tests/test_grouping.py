@@ -1,7 +1,8 @@
 from datetime import date
 from unittest import TestCase
+
 from baumbelt.grouping import group_by_key
-from itertools import groupby
+
 
 class GroupByKeyTestCase(TestCase):
 

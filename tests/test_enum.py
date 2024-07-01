@@ -1,7 +1,7 @@
 from enum import Enum
 from unittest import TestCase
 
-from baumbelt.enum import EnumContainsMeta
+from baumbelt.enums import EnumContainsMeta
 
 
 class AtomEnum(Enum, metaclass=EnumContainsMeta):

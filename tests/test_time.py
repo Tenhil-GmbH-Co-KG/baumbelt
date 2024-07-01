@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from unittest import TestCase
 
-from baumbelt.time import MeasureTime
+from baumbelt.timing import MeasureTime
 
 
 class MeasureTimeTestCase(TestCase):

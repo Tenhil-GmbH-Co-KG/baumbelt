@@ -22,7 +22,7 @@ Everything imported from `baumbelt.django` assumes Django to be installed.
 
 ```python
 from enum import Enum
-from baumbelt.enum import EnumContainsMeta
+from baumbelt.enums import EnumContainsMeta
 
 
 class AtomEnum(Enum, metaclass=EnumContainsMeta):
@@ -56,7 +56,7 @@ print(f"{tend} ({tend.total_seconds()}s)")
 `MeasureTime`:
 
 ```python
-from baumbelt.time import MeasureTime
+from baumbelt.timing import MeasureTime
 
 with MeasureTime() as mt:
     this_call_takes_a_while()
@@ -70,7 +70,7 @@ This snippet:
 
 ```python
 import time
-from baumbelt.time import Timer
+from baumbelt.timing import Timer
 
 
 def fetch_raw_data():
@@ -124,7 +124,7 @@ This especially comes in handy, if your code runs in detached environments (e.g.
 
 ```python
 import logging
-from baumbelt.logging import HuggingLog
+from baumbelt.logs import HuggingLog
 
 logger = logging.getLogger(__name__)
 

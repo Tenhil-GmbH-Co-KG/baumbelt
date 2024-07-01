@@ -1,6 +1,6 @@
 from typing import Callable, Any
 
-from baumbelt.time import MeasureTime
+from baumbelt.timing import MeasureTime
 
 
 class HuggingLog:
