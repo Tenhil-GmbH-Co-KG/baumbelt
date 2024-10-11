@@ -15,6 +15,9 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Utilities",
 ]
+dependencies = [
+    "pygments==2.18.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/Tenhil-GmbH-Co-KG/baumbelt"
