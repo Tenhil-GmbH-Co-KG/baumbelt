@@ -1,6 +1,6 @@
 [project]
 name = "baumbelt"
-version = "0.4.1"
+version = "0.4.2"
 authors = [
     { name = "Watte", email = "python@tenhil.de" },
 ]
