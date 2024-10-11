@@ -178,3 +178,5 @@ def django_sql_debug(
         settings.LOGGING["loggers"]["django.db.backends"] = prev_db_backends
     else:
         del settings.LOGGING["loggers"]["django.db.backends"]
+
+    dictConfig(settings.LOGGING)
