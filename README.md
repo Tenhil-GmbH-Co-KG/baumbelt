@@ -234,6 +234,7 @@ you actually want to see.
 ```python
 from baumbelt.django.sql import django_sql_debug
 
+
 with django_sql_debug():
     author, _ = Author.objects.get_or_create(name="Martin Heidegger")
     book, _ = Book.objects.get_or_create(title="Sein und Zeit", author=author)
@@ -241,13 +242,13 @@ with django_sql_debug():
 ```
 
 ```text
-(0.000) SELECT "myapp_author"."id", "myapp_author"."name" FROM "myapp_author" WHERE "myapp_author"."name" = 'Martin Heidegger' LIMIT 21; args=('Martin Heidegger',); alias=default
-(0.000) SELECT "myapp_book"."id", "myapp_book"."title", "myapp_book"."author_id" FROM "myapp_book" WHERE ("myapp_book"."author_id" = 1 AND "myapp_book"."title" = 'Sein und Zeit') LIMIT 21; args=(1, 'Sein und Zeit'); alias=default
-(0.000) SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
+(0.000) 
+SELECT "myapp_author"."id", "myapp_author"."name" FROM "myapp_author" WHERE "myapp_author"."name" = 'Martin Heidegger' LIMIT 21; args=('Martin Heidegger',); alias=default
+(0.000) 
+SELECT "myapp_book"."id", "myapp_book"."title", "myapp_book"."author_id" FROM "myapp_book" WHERE ("myapp_book"."author_id" = 1 AND "myapp_book"."title" = 'Sein und Zeit') LIMIT 21; args=(1, 'Sein und Zeit'); alias=default
+(0.000) 
+SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
 ```
-
-> The way this context manager alters the `logging` dict of Django's `settings` module is rather hacky and not advised to be used on production.
-> It may alter your own logging configuration in a way neither you nor us is expecting :)
 
 `django_sql_debug` also accepts some arguments to control how the SQL should be presented:
 
