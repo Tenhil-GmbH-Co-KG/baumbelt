@@ -1,5 +1,11 @@
 name: Ruff
-on: workflow_call
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
 
 jobs:
   ruff:
