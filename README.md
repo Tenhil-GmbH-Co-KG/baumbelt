@@ -116,8 +116,8 @@ v 'main' started...
 
 If you don't pass a `name` to `Timer()`, it will use the `inspect` package to find the caller function's name.
 
-
 ### Query Support
+
 When Django is available, the `Timer` will also track the queries fired per block. Given this example code:
 
 ```python
@@ -137,7 +137,7 @@ v 'handle' started...
 ʌ'handle' took 0.0122s, had 8 queries
 ```
 
-If you don't want this, pass `disable_queries=True` to `Timer()`. 
+If you don't want this, pass `disable_queries=True` to `Timer()`.
 
 ## HuggingLog
 
@@ -234,7 +234,6 @@ you actually want to see.
 ```python
 from baumbelt.django.sql import django_sql_debug
 
-
 with django_sql_debug():
     author, _ = Author.objects.get_or_create(name="Martin Heidegger")
     book, _ = Book.objects.get_or_create(title="Sein und Zeit", author=author)
@@ -272,6 +271,57 @@ WHERE "myapp_author"."id" IN (0,
                               1,
                               2,
                               3,
-                              /* 5 truncated */
+    /* 5 truncated */
                               9)
 ```
+
+## s3utils [Django]
+
+When developing apps in Django, you may find yourself surrounded by AWS storages. In some Django specialities like `collectstatic`, bulk-uploading
+makes a lot of sense. `baumbelt.django.s3utils` tries to fill this gap. You can use the storage class `BulkStaticStorage` to enable bulk operations.
+
+### Existence checks
+
+Say, your bucket containing a key `/myfolder/myfile.txt`. When using the base class `S3Boto3Storage`, the following checks:
+
+- exists("myfolder/myfile.txt") -> True
+- exists("myfolder/") -> False
+- exists("myfolder") -> False
+- exists("myfol") -> False
+
+When using the classes from `baumbelt.django.s3utils`, it looks like this:
+
+- exists("myfolder/myfile.txt") -> True
+- exists("myfolder/") -> True
+- exists("myfolder") -> True
+- exists("myfol") -> False
+
+### Example configuration
+
+```python
+
+INSTALLED_APPS = [
+    # ...
+    "s3utils",
+    # ...
+]
+
+AWS_PRIVATE_BUCKET = os.environ["AWS_PRIVATE_BUCKET"]
+AWS_PUBLIC_BUCKET = os.environ["AWS_PUBLIC_BUCKET"]
+PRIVATE_MEDIA_LOCATION = "media"
+PUBLIC_MEDIA_LOCATION = "media"
+STATIC_LOCATION = "static"
+MEDIA_DOMAIN = f"{AWS_PUBLIC_BUCKET}.s3.amazonaws.com"
+STATIC_DOMAIN = f"{AWS_PUBLIC_BUCKET}.s3.amazonaws.com"
+MEDIA_URL = f"https://{MEDIA_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/"
+STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_LOCATION}/"
+
+STORAGES = {
+    "default": {"BACKEND": "s3utils.storage.PrivateMediaStorage"},
+    "public": {"BACKEND": "s3utils.storage.PublicMediaStorage"},
+    "staticfiles": {"BACKEND": "s3utils.storage.BulkStaticStorage"},
+}
+
+```
+
+Tip: install [tqdm](https://pypi.org/project/tqdm/) for nice progress bars during uploads.
