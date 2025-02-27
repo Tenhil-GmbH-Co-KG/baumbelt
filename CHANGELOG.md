@@ -7,3 +7,7 @@
 ## 1.2.0
 
 - add s3 utils for django package
+
+## 1.3.0
+
+- add CdnBulkStaticStorage class to django packge
