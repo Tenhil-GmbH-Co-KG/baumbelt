@@ -245,3 +245,16 @@ class BulkStaticStorage(StaticStorage):
             self._flush_deferred_delete_calls()
 
         return []
+
+
+class CdnBulkStaticStorage(BulkStaticStorage):
+    """
+    When configuring a CDN (eg AWS Cloudfront), it's likely that it serves
+    from a private bucket. The default BulkStaticStorage requires a public bucket.
+    """
+
+    @property
+    def bucket_name(self):
+        if not hasattr(settings, "AWS_PRIVATE_BUCKET"):
+            raise ImproperlyConfigured("settings must contain AWS_PRIVATE_BUCKET when using CdnBulkStaticStorage")
+        return settings.AWS_PRIVATE_BUCKET
