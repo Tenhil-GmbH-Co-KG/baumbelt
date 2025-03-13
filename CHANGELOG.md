@@ -11,3 +11,8 @@
 ## 1.3.0
 
 - add CdnBulkStaticStorage class to django packge
+
+
+## 1.3.1
+
+- add utility management commands for s3 utils
