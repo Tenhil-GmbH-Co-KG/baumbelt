@@ -325,3 +325,9 @@ STORAGES = {
 ```
 
 Tip: install [tqdm](https://pypi.org/project/tqdm/) for nice progress bars during uploads.
+
+
+### wait-for-migrations
+
+When deploying django apps, you may find it necessary to asure that all migrations are done during a step in your deployment. You can use the management command `wait-for-migrations` to do so.
+This command blocks the Thread for 60 seconds to handle all migrations of all databases set in `settings.DATABASES`. You can also adjust the timeout value with the argument `--timeout`.
