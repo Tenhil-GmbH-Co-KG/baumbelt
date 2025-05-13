@@ -10,7 +10,7 @@
 
 ## 1.3.0
 
-- add CdnBulkStaticStorage class to django packge
+- add CdnBulkStaticStorage class to django package
 
 
 ## 1.3.1

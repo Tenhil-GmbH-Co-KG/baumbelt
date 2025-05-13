@@ -62,7 +62,7 @@ class Timer:
         if disable_queries is UNSET:
             disable_queries = not DJANGO_AVAILABLE
 
-        # Fail if mentioned explicitely, but Django is not present.
+        # Fail if mentioned explicitly, but Django is not present.
         elif disable_queries is False and not DJANGO_AVAILABLE:
             raise ValueError(
                 "Queries can't be tracked if Django is not installed. Hint: remove your `disable_queries` argument."
