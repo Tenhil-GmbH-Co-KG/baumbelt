@@ -7,7 +7,6 @@ from baumbelt.timing import MeasureTime
 
 
 class MeasureTimeTestCase(TestCase):
-
     def test_duration(self):
         t0 = datetime.now()
 

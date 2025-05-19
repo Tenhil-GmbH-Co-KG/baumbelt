@@ -5,7 +5,6 @@ from baumbelt.grouping import group_by_key
 
 
 class GroupByKeyTestCase(TestCase):
-
     def test_group_by_callable_key(self):
         iterable = [
             date(2020, 1, 1),

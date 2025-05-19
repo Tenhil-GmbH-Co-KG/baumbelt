@@ -7,7 +7,6 @@ from tests.utils import strip_duration_and_seconds
 
 
 class HuggingLogTestCase(TestCase):
-
     def test_hugging_log_print_default(self):
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer), HuggingLog("cross-compile doom"):

@@ -52,6 +52,7 @@ def get_new_version(current_version: str) -> str:
 
     return new_version
 
+
 def commit_version_change(version: str):
     answer = input("Do you want to commit the version bump and create a new tag? [Yn]")
     if answer == "n":
@@ -70,11 +71,7 @@ def commit_version_change(version: str):
         exit(1)
 
     subprocess.run(
-        [
-            "git",
-            "add",
-            pyproject_path
-        ],
+        ["git", "add", pyproject_path],
         check=True,
     )
     subprocess.run(["git", "commit", "-m", commit_msg])
@@ -82,7 +79,7 @@ def commit_version_change(version: str):
     subprocess.run(["git", "tag", "-a", version, "-m", tag_msg])
 
     print("Commit built, dont forget to push :)")
-    print(f"To push the new created tag use the following command: \"git push origin tag {version}\"")
+    print(f'To push the new created tag use the following command: "git push origin tag {version}"')
 
 
 def get_current_version(pyproject_lines: list[str]) -> str:
@@ -92,7 +89,7 @@ def get_current_version(pyproject_lines: list[str]) -> str:
             current_version = line.split("=")[1].strip()
 
     if not current_version:
-        print("Found no line starting with \"version\" in the pyproject.toml. Please fix before you continue")
+        print('Found no line starting with "version" in the pyproject.toml. Please fix before you continue')
         exit(1)
 
     return current_version
@@ -102,7 +99,7 @@ def write_version(version: str, pyproject_lines: list[str]):
     with open(pyproject_path, "w") as pyproject_file:
         for line in pyproject_lines:
             if line.startswith("version"):
-                line = f"version = \"{version}\"\n"
+                line = f'version = "{version}"\n'
             pyproject_file.write(line)
 
 
