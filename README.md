@@ -197,6 +197,43 @@ The passed *attribute_name* can also be a callable (like `date.weekday()`) or ju
 
 > There exists `itertools.groupby`, but it would return iterators that may be undesired.
 
+## pklcache
+
+When debugging something that involves slow IO or heavy computation, you may find yourself looking for some sort of cache.
+The `baumbelt.cache.pklcache` decorator attempts to help here. Wrapped around a function, it will `pickle` its result to a local file, and
+`unpickle` it when it's called the next time.
+
+```python
+import time
+from baumbelt.cache import pklcache
+
+
+@pklcache
+def do_work(foo: int, bar: bool):
+    time.sleep(60)
+    return 42
+
+
+do_work(420, False)  # First run, takes 60s, creates `do_work.pkl`
+do_work(420, False)  # Second run, unpickles `do_work.pkl` file immediately.
+do_work(999, True)  # WARNING: returns the same cached value.
+```
+
+You may change the pickle file destination (and name). It defaults to the current working directory, and
+the decorated function's name.
+
+If the body of the cached function changes, or you just want a fresh result, you may pass `force_refresh`. It will
+overwrite any pre-existing cache file with the latest actual function result. This is equivalent to manually removing
+the cached file from your filesystem before every execution.
+
+```python
+@pklcache(destination="/tmp/cache", force_refresh=True)
+def do_work(foo: int, bar: bool):
+    time.sleep(60)
+    return 42
+```
+
+
 ## count_queries [Django]
 
 When developing apps in Django, you often find yourself hunting for performance bottlenecks. Or maybe just
@@ -325,7 +362,6 @@ STORAGES = {
 ```
 
 Tip: install [tqdm](https://pypi.org/project/tqdm/) for nice progress bars during uploads.
-
 
 ### wait-for-migrations
 
