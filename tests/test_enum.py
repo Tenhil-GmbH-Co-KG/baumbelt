@@ -12,7 +12,6 @@ class AtomEnum(Enum, metaclass=EnumContainsMeta):
 
 
 class EnumContainsTestCase(TestCase):
-
     def test_enum_contains(self):
         self.assertIn("hydrogen", AtomEnum)
         self.assertIn("helium", AtomEnum)
