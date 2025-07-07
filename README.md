@@ -298,6 +298,11 @@ SELECT COUNT(*) AS "__count" FROM "myapp_author"; args=(); alias=default
 - `truncate_unparsable`: Boolean, default `True`. If a query gets too long to be parsed in reasonable time (for formatting and syntax highlights), we
   will just trim it and display it the default way. So no formatting or colors. But if you really want to see the whole query, you can force that.
 
+
+- `db_name`: String to specify the database to work with when you have a multiple database setup or when you don't have the `default` alias for your DB.
+    Default value is `default`. 
+
+
 In this example, the SQL is indented, and the arguments are limited to 5:
 
 ```sql
