@@ -4,7 +4,7 @@ import time
 import pygments
 import sqlparse
 from django.core.management.color import supports_color
-from django.db import connection
+from django.db import connections
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers import SqlLexer
 from sqlparse.sql import Parenthesis, IdentifierList, Identifier
@@ -116,7 +116,12 @@ class DjangoSQLWrapper:
 
 
 @contextlib.contextmanager
-def django_sql_debug(indent: bool = False, max_arguments: int = 5, truncate_unparsable: bool = True):
+def django_sql_debug(
+        indent: bool = False,
+        max_arguments: int = 5,
+        truncate_unparsable: bool = True,
+        db_name: str = "default"
+):
     dj_sql_wrap = DjangoSQLWrapper(indent=indent, max_arguments=max_arguments, truncate_unparsable=truncate_unparsable)
-    with connection.execute_wrapper(dj_sql_wrap):
+    with connections[db_name].execute_wrapper(dj_sql_wrap):
         yield
