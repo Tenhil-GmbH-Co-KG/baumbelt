@@ -20,3 +20,11 @@
 
 - change the use of Django's `connection.execute_wrapper` to `connections[db_name].execute_wrapper` for SQL logging on
   non-default dbs
+
+## 1.5.2
+
+- TODO
+
+## 1.6.0
+
+- add class `SmartRetryHTTPAdapter`

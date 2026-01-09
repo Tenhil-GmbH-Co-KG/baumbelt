@@ -233,6 +233,23 @@ def do_work(foo: int, bar: bool):
     return 42
 ```
 
+## SmartTimeoutHTTPAdapter
+
+And HTTP Adapter that can be used to guarantee the end of a request after a given time while handling retries and
+separate individual request timeouts:
+
+```python
+from requests import Session
+from baumbelt.requests import SmartRetryHTTPAdapter
+
+session = Session()
+session.mount("", SmartRetryHTTPAdapter(
+    overall_timeout=30.0,
+    single_connect_timeout=3.0,
+    single_read_timeout=10.0,
+))
+response = session.get("https://foo.bar/some-resource/")
+```
 
 ## count_queries [Django]
 
