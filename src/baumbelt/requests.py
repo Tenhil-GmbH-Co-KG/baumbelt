@@ -2,10 +2,14 @@ import logging
 from datetime import datetime, timedelta
 from time import sleep
 
-import requests
+from requests import Timeout, Response
 from requests.adapters import HTTPAdapter, DEFAULT_POOLSIZE, DEFAULT_POOLBLOCK
 
 logger = logging.getLogger(__name__)
+
+
+class OverallTimeout(Timeout):
+    pass
 
 
 class SmartRetryHTTPAdapter(HTTPAdapter):
@@ -51,19 +55,18 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
         self.connect_timeout_ratio: float = self.single_connect_timeout / self.single_timeout
         self.min_connect_timeout: float = self.give_up_threshold / 2
 
-    def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None) -> requests.Response:
+    def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None) -> Response:
         start = datetime.now()
         end = start + timedelta(seconds=self.overall_timeout)
         attempts = 0
-        last_error = None
+        response: Response | None = None
+        last_error: Timeout | None = None
+        last_duration: float | None = None
 
         while True:
             time_til_end = end - datetime.now()
             max_timeout = max(time_til_end.total_seconds(), 0.0)
             if max_timeout < self.give_up_threshold:
-                logger.debug(
-                    f"no time left for another retry, aborting ({max_timeout=:.1f}, {self.give_up_threshold=:.1f})"
-                )
                 break
 
             planned_connect_timeout = max_timeout * self.connect_timeout_ratio
@@ -75,25 +78,18 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
 
             timeout = (connect_timeout, read_timeout)
 
+            attempts += 1
+            req_start = datetime.now()
             try:
-                attempts += 1
                 response = super().send(request, stream, timeout, verify, cert, proxies)
+                if response.status_code < 500:
+                    break
 
-            except requests.ConnectTimeout as err:
-                logger.debug(f"got a connect timeout, possibly retrying ({connect_timeout=:.1f}, {err=})")
+            except Timeout as err:
                 last_error = err
 
-            except requests.ReadTimeout as err:
-                logger.debug(f"got a read timeout, possibly retrying ({read_timeout=:.1f}, {err=})")
-                last_error = err
-
-            else:
-                if (status := response.status_code) >= 500:
-                    logger.debug(f"got a server error, possibly retrying ({status=})")
-                else:
-                    logger.debug(f"request finished ({status=}, {attempts=})")
-                    response.raise_for_status()
-                    return response
+            finally:
+                last_duration = (datetime.now() - req_start).total_seconds()
 
             backoff_index = min(attempts - 1, len(self.backoff_times) - 1)
             backoff = self.backoff_times[backoff_index]
@@ -101,13 +97,19 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
             time_til_end = end - datetime.now()
             max_sleep = max(time_til_end.total_seconds(), 0.0)
             if max_sleep < backoff:
-                logger.debug(f"no time left to wait for backoff, aborting ({max_sleep=:.1f}, {backoff=:.1f})")
                 break
 
             sleep(backoff)
 
-        logger.debug(f"request failed, raising error ({attempts=})")
-        if last_error:
-            raise last_error
-        else:
-            raise requests.Timeout(request=request)
+        status_str = f"status={response.status_code}" if response else "status=none"
+        attempts_str = f"attempts={attempts}"
+        duration_str = f"last_duration={last_duration:.3f}" if last_duration else "last_duration=none"
+        error_str = f"last_error={type(last_error).__name__}" if last_error else "last_error=none"
+
+        logger.debug(f"{status_str}, {attempts_str}, {duration_str}, {error_str}")
+
+        if response:
+            response.raise_for_status()
+            return response
+
+        raise last_error or OverallTimeout(request=request)
