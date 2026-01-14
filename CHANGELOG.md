@@ -28,3 +28,7 @@
 ## 1.6.0
 
 - add class `SmartRetryHTTPAdapter`
+
+## 1.6.1
+
+- use a single point of return with a single log line in a fixed format in `SmartRetryHTTPAdapter.send`
