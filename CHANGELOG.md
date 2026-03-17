@@ -32,3 +32,7 @@
 ## 1.6.1
 
 - use a single point of return with a single log line in a fixed format in `SmartRetryHTTPAdapter.send`
+
+## 1.7.0
+
+- add queryset batching: `batch_ordered_queryset` and `iterate_batch_ordered_queryset`
