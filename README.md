@@ -334,6 +334,24 @@ WHERE "myapp_author"."id" IN (0,
                               9)
 ```
 
+### Batching QuerySets [Django]
+When working with large querysets, you may want to process records in batches to avoid loading everything into memory at once. Use 
+`batch_ordered_queryset` to iterate over an ordered queryset in configurable batch sizes:
+
+```python
+from baumbelt.django.sql.batch import batch_ordered_queryset, iterate_batch_ordered_queryset
+
+qs = Book.objects.all().order_by("pk")
+
+for batch in batch_ordered_queryset(queryset=qs, batch_size=1000):
+    ...  # batch is a list with up to 1000 Book instances
+
+# If you need to iterate over individual records without handling batches explicitly;
+# Although, Django's native `qs.iterator()` would do pretty much the same.
+for book in iterate_batch_ordered_queryset(queryset=qs, batch_size=1000):
+    ...  # book is a single Book instance
+```
+
 ## s3utils [Django]
 
 When developing apps in Django, you may find yourself surrounded by AWS storages. In some Django specialities like `collectstatic`, bulk-uploading
