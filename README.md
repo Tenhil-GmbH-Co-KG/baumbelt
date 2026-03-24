@@ -233,6 +233,21 @@ def do_work(foo: int, bar: bool):
     return 42
 ```
 
+## retry
+
+A decorator that retries the wrapped function when specified exceptions occur. Supports max tries, delay, exponential backoff and jitter.
+
+```python
+import logging
+from baumbelt.retry import retry
+
+logger = logging.getLogger(__name__)
+
+@retry(exceptions=ConnectionError, max_tries=5, retry_delay=1, backoff=2.0, logging_fn=logger.warning)
+def fetch_data():
+    return request_something()
+```
+
 ## SmartTimeoutHTTPAdapter
 
 And HTTP Adapter that can be used to guarantee the end of a request after a given time while handling retries and
