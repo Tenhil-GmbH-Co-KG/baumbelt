@@ -33,6 +33,10 @@
 
 - use a single point of return with a single log line in a fixed format in `SmartRetryHTTPAdapter.send`
 
+## 1.8.0
+
+- add `retry` decorator for retrying functions on exception with configurable delay, backoff and jitter
+
 ## 1.7.0
 
 - add queryset batching: `batch_ordered_queryset` and `iterate_batch_ordered_queryset`
