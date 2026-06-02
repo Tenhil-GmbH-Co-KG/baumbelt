@@ -2,14 +2,20 @@ import logging
 from datetime import datetime, timedelta
 from time import sleep
 
-from requests import Timeout, Response
-from requests.adapters import HTTPAdapter, DEFAULT_POOLSIZE, DEFAULT_POOLBLOCK
+from requests import Response, Timeout
+from requests.adapters import DEFAULT_POOLBLOCK, DEFAULT_POOLSIZE, HTTPAdapter
 
 logger = logging.getLogger(__name__)
 
 
 class OverallTimeout(Timeout):
-    pass
+    def __init__(self, attempts: int = 0, url: str = "", **kwargs):
+        super().__init__(**kwargs)
+        self.attempts = attempts
+        self.url = url
+
+    def __str__(self):
+        return f"OverallTimeout(attempts={self.attempts},url={self.url})"
 
 
 class SmartRetryHTTPAdapter(HTTPAdapter):
@@ -112,4 +118,4 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
             response.raise_for_status()
             return response
 
-        raise last_error or OverallTimeout(request=request)
+        raise last_error or OverallTimeout(attempts=attempts, url=request.url)
