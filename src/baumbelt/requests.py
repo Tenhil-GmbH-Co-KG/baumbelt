@@ -107,14 +107,14 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
 
             sleep(backoff)
 
-        status_str = f"status={response.status_code}" if response else "status=none"
+        status_str = f"status={response.status_code}" if response is not None else "status=none"
         attempts_str = f"attempts={attempts}"
         duration_str = f"last_duration={last_duration:.3f}" if last_duration else "last_duration=none"
         error_str = f"last_error={type(last_error).__name__}" if last_error else "last_error=none"
 
         logger.debug(f"{status_str}, {attempts_str}, {duration_str}, {error_str}")
 
-        if response:
+        if response is not None:
             response.raise_for_status()
             return response
 
