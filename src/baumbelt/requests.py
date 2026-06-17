@@ -118,4 +118,7 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
             response.raise_for_status()
             return response
 
-        raise last_error or OverallTimeout(attempts=attempts, url=request.url)
+        if last_error:
+            raise last_error
+
+        raise OverallTimeout(attempts=attempts, url=request.url)
