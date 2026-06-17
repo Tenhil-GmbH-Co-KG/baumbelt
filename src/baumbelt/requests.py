@@ -88,7 +88,8 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
             req_start = datetime.now()
             try:
                 response = super().send(request, stream, timeout, verify, cert, proxies)
-                if response.status_code < 500:
+                # Everything above status=501 should be retryable.
+                if response.status_code <= 501:
                     break
 
             except Timeout as err:
