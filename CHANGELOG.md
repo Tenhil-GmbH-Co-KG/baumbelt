@@ -40,3 +40,7 @@
 ## 1.7.0
 
 - add queryset batching: `batch_ordered_queryset` and `iterate_batch_ordered_queryset`
+
+## 1.8.5
+
+- retry dropped connections in `SmartRetryHTTPAdapter`
