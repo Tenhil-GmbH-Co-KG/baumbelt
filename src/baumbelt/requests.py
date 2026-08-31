@@ -4,6 +4,7 @@ from time import sleep
 
 from requests import Response, Timeout
 from requests.adapters import DEFAULT_POOLBLOCK, DEFAULT_POOLSIZE, HTTPAdapter
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
     - all times specified in seconds as float
     - overall_timeout specifies the total time after which an end of the request is guaranteed
     - single_connect_timeout and single_read_timeout specify a timeout for individual requests
-    - if individual requests time out or fail with server errors (5XX), they are retried as long as there still time
-      left before the overall timeout
+    - if individual requests time out, lose their connection or fail with retryable server errors (502 and above),
+      they are retried as long as there still time left before the overall timeout
     - the number of retries does not matter - if the request fails fast, more retries may fit into the overall timeout
       window
     - a tuple of backoff_times is used between failing requests - if there are more retries than elements, it will
@@ -66,7 +67,7 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
         end = start + timedelta(seconds=self.overall_timeout)
         attempts = 0
         response: Response | None = None
-        last_error: Timeout | None = None
+        last_error: Timeout | RequestsConnectionError | None = None
         last_duration: float | None = None
 
         while True:
@@ -92,7 +93,10 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
                 if response.status_code <= 501:
                     break
 
-            except Timeout as err:
+            # A connection dropped by the peer is most commonly a keepalive connection from the pool that the
+            # other side has already closed - retrying it on a fresh connection is what makes it succeed.
+            except (Timeout, RequestsConnectionError) as err:
+                response = None
                 last_error = err
 
             finally:
