@@ -1,6 +1,6 @@
 [project]
 name = "baumbelt"
-version = "1.8.5"
+version = "1.8.6"
 authors = [
     { name = "Watte", email = "python@tenhil.de" },
 ]
@@ -28,7 +28,7 @@ Issues = "https://github.com/Tenhil-GmbH-Co-KG/baumbelt/issues"
 dev = [
     "ruff==0.11.10",
     "build==1.2.1",
-    "pytest==8.2.1",
+    "pytest==9.1.1",
     "twine==5.1.0"
 ]
 django = [

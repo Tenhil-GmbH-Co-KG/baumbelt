@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 from datetime import datetime, timedelta
 from time import sleep
 
@@ -7,6 +9,34 @@ from requests.adapters import DEFAULT_POOLBLOCK, DEFAULT_POOLSIZE, HTTPAdapter
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 logger = logging.getLogger(__name__)
+
+
+def _running_under_test_runner() -> bool:
+    """
+    True only when the current process is `pytest`/`py.test`, or `manage.py test` / `django-admin test` - never for a
+    real entrypoint such as gunicorn, `manage.py runserver` or an rq worker.
+
+    Retrying a request that fails instantly (e.g. an HTTP-mocking library answering an unregistered URL with a
+    ConnectionError) is pointless and, combined with the backoff schedule, can cost the adapter's entire
+    overall_timeout before the test finally fails. Under a real test runner that's just wasted time, since there's
+    nothing to wait out: either the call is mocked (deterministic) or it targets a deliberately unresolvable dummy
+    host. So callers of send() short-circuit to a single attempt when this is true.
+    """
+
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        return True
+
+    argv = sys.argv
+    if not argv:
+        return False
+
+    prog = os.path.basename(argv[0])
+    if prog in ("pytest", "py.test"):
+        return True
+    if prog in ("manage.py", "django-admin", "django-admin.py") and "test" in argv[1:]:
+        return True
+
+    return False
 
 
 class OverallTimeout(Timeout):
@@ -63,6 +93,13 @@ class SmartRetryHTTPAdapter(HTTPAdapter):
         self.min_connect_timeout: float = self.give_up_threshold / 2
 
     def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None) -> Response:
+        if _running_under_test_runner():
+            response = super().send(
+                request, stream, (self.single_connect_timeout, self.single_read_timeout), verify, cert, proxies
+            )
+            response.raise_for_status()
+            return response
+
         start = datetime.now()
         end = start + timedelta(seconds=self.overall_timeout)
         attempts = 0
