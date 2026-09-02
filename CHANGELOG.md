@@ -44,3 +44,7 @@
 ## 1.8.5
 
 - retry dropped connections in `SmartRetryHTTPAdapter`
+
+## 1.8.6
+
+- don't retry in `SmartRetryHTTPAdapter` when running tests
