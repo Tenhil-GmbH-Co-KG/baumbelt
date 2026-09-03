@@ -22,8 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install -e .
-          python -m pip install pytest
+          python -m pip install -e ".[django,dev]"
 
       - name: Unit tests
         run: PYTHONPATH=src pytest
