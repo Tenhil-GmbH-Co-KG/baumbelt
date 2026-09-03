@@ -48,3 +48,13 @@
 ## 1.8.6
 
 - don't retry in `SmartRetryHTTPAdapter` when running tests
+
+## 1.9.0
+
+- add `GracefulCommand` (`baumbelt.django.cmd`) for SIGTERM-aware management commands
+- add `baumbelt.django.db` app with `wait_for_migrations`/`wait-for-migrations` command
+- **breaking:** `wait-for-migrations` moved from `baumbelt.django.s3utils` to `baumbelt.django.db` — add
+  `"baumbelt.django.db"` to `INSTALLED_APPS` instead
+- add `baumbelt.django.procs` app with `show-running-management-commands` command
+- add `delete_unreferenced_files` to `baumbelt.django.s3utils.utils`
+- add `loop_log` to `baumbelt.logs`
