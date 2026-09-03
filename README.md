@@ -169,6 +169,21 @@ This outputs something like:
 >
 > `with HuggingLog(..., logging_fn=lambda s: logger.debug(s)):`
 
+## loop_log
+
+`baumbelt.logs.loop_log(iterable, item_name="item", times=5, seconds=30, use_print=False)` wraps an iterable/generator and logs progress while you iterate over it, without cluttering your loop body with logging calls. Handy for long-running cronjobs where you want throughput visibility but don't want to litter the loop itself.
+
+- If the iterable has a `__len__` (list, queryset, ...), it logs a fixed number of times (`times`) spread evenly across the loop.
+- Otherwise (a plain iterator/generator) it logs based on elapsed time, at least every `seconds` seconds — showing throughput instead of a fixed count.
+- Pass `use_print=True` to `print()` instead of logging via `logger.debug`.
+
+```python
+from baumbelt.logs import loop_log
+
+for job in loop_log(queryset, item_name="job", times=10):
+    process(job)
+```
+
 ## group_by_key
 
 `baumbelt.grouping.group_by_key` is a little utility to group a given iterable by an attribute of its items.
@@ -418,7 +433,55 @@ STORAGES = {
 
 Tip: install [tqdm](https://pypi.org/project/tqdm/) for nice progress bars during uploads.
 
+### delete_unreferenced_files
+
+`delete_unreferenced_files(field, filename_prefix, dry_run=False)` deletes S3 files under `filename_prefix` that are no longer referenced by any value of the given model `FileField`. Useful for cleaning up orphaned uploads in cronjobs. Only works when the field's storage is an `S3Storage` (e.g. the storage classes above) — anything else logs a warning and does nothing. Pass `dry_run=True` to log what would be deleted without actually deleting.
+
+## db [Django]
+
+`baumbelt.django.db` bundles reusable Django database helpers. Add `"baumbelt.django.db"` to `INSTALLED_APPS` to use it.
+
 ### wait-for-migrations
 
 When deploying django apps, you may find it necessary to asure that all migrations are done during a step in your deployment. You can use the management command `wait-for-migrations` to do so.
 This command blocks the Thread for 60 seconds to handle all migrations of all databases set in `settings.DATABASES`. You can also adjust the timeout value with the argument `--timeout`.
+
+## cmd [Django]
+
+`baumbelt.django.cmd` provides `GracefulCommand`, a `BaseCommand` subclass for management commands run as k8s cronjobs. k8s sends `SIGTERM` before killing a pod, but that only reaches the actual process if it's PID 1 — the cronjob's `command:` must be plain argv (e.g. `["./manage.py", "some-command"]`), not a `bash -c "..."` wrapper, otherwise bash (as PID 1) swallows the signal.
+
+Swap the base class to opt in:
+
+```python
+from baumbelt.django.cmd import GracefulCommand
+
+class Command(GracefulCommand):
+    def handle(self, *args, **options):
+        while not self.shutdown_requested:
+            ...  # do work, check self.shutdown_requested to wind down early
+```
+
+On `SIGTERM`, `GracefulCommand`:
+
+- logs a warning (picked up by Sentry's logging integration, if configured) so the shutdown attempt is visible even if the command doesn't react to it,
+- sets `self.shutdown_requested = True` so long-running loops can check it and wind down on their own terms,
+- calls `self.on_sigterm()` — override this for teardown logic,
+- raises `GracefulShutdown` so the process exits with a clear stack trace instead of silently dying to `SIGKILL`.
+
+`GracefulCommand` also waits for pending migrations before running the command's `handle()`, via `require_db_migrated = True` (default). This replaces chaining `./manage.py wait-for-migrations && ./manage.py some-command` in the cronjob yaml — set `require_db_migrated = False` on commands that don't touch the database. The wait also respects `self.shutdown_requested`, so a `SIGTERM` arriving while still waiting for migrations exits cleanly instead of spinning until `SIGKILL`.
+
+## procs [Django]
+
+`baumbelt.django.procs` bundles process-table introspection for hosts where cronjobs aren't managed by k8s (e.g. a long-lived container on plain EC2/docker compose that spawns cronjobs as children). Add `"baumbelt.django.procs"` to `INSTALLED_APPS` and the `psutil` dependency to use it.
+
+### show-running-management-commands
+
+Scans the process table for `manage.py <command>` child processes and reports them — useful for a deploy script to check "is any cronjob still running?" before deploying, without needing any DB-backed tracking. Typical usage is a deploy script that shells into the running container to ask:
+
+```bash
+ssh some-ec2-instance "docker compose exec some-container ./manage.py show-running-management-commands --json"
+```
+
+`--json` prints `{"results": [{"pid": ..., "cmd_name": ..., "running_seconds": ...}, ...]}`; without it, prints one human-readable line per running command. Empty `results` means nothing is currently running.
+
+You can also call `list_running_management_commands()` from `baumbelt.django.procs.utils` directly if you need the data in Python.
