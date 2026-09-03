@@ -117,10 +117,7 @@ class DjangoSQLWrapper:
 
 @contextlib.contextmanager
 def django_sql_debug(
-        indent: bool = False,
-        max_arguments: int = 5,
-        truncate_unparsable: bool = True,
-        db_name: str = "default"
+    indent: bool = False, max_arguments: int = 5, truncate_unparsable: bool = True, db_name: str = "default"
 ):
     dj_sql_wrap = DjangoSQLWrapper(indent=indent, max_arguments=max_arguments, truncate_unparsable=truncate_unparsable)
     with connections[db_name].execute_wrapper(dj_sql_wrap):
