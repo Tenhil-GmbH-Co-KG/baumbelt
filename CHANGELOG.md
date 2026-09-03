@@ -58,3 +58,9 @@
 - add `baumbelt.django.procs` app with `show-running-management-commands` command
 - add `delete_unreferenced_files` to `baumbelt.django.s3utils.utils`
 - add `loop_log` to `baumbelt.logs`
+
+## 1.9.1
+
+- `GracefulCommand` skips `wait_for_migrations` under a test runner — mirrors the 1.8.6 `SmartRetryHTTPAdapter` fix.
+  Without it, per-`TestCase` DB isolation makes the migrate-check fail forever, blocking the command for the full 60s
+  timeout.

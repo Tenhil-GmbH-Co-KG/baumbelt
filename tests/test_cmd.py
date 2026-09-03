@@ -20,14 +20,23 @@ class WithoutMigrationWait(GracefulCommand):
 
 
 class GracefulCommandExecuteTestCase(TestCase):
+    @patch("baumbelt.django.cmd._running_under_test_runner", return_value=False)
     @patch("baumbelt.django.cmd.wait_for_migrations")
-    def test_waits_for_migrations_by_default(self, wait_for_migrations):
+    def test_waits_for_migrations_by_default_outside_test_runner(self, wait_for_migrations, _running_under_test):
         call_command(WithMigrationWait())
         wait_for_migrations.assert_called_once()
 
     @patch("baumbelt.django.cmd.wait_for_migrations")
     def test_skips_migration_wait_when_disabled(self, wait_for_migrations):
         call_command(WithoutMigrationWait())
+        wait_for_migrations.assert_not_called()
+
+    @patch("baumbelt.django.cmd._running_under_test_runner", return_value=True)
+    @patch("baumbelt.django.cmd.wait_for_migrations")
+    def test_skips_migration_wait_under_test_runner(self, wait_for_migrations, _running_under_test):
+        # Migrations are already applied by the test setup, and under Django's per-TestCase DB isolation the
+        # migrate-check would poll forever against any undeclared database until it times out.
+        call_command(WithMigrationWait())
         wait_for_migrations.assert_not_called()
 
     def test_restores_previous_sigterm_handler_after_execute(self):
