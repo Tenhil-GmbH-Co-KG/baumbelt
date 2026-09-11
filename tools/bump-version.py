@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import re
 import subprocess
 from pathlib import Path
@@ -104,14 +105,21 @@ def write_version(version: str, pyproject_lines: list[str]):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="Do not actually change anything")
+    args = parser.parse_args()
+
     with open(pyproject_path, "r") as pyproject_file:
         pyproject_lines = pyproject_file.readlines()
 
     current_version = get_current_version(pyproject_lines)
     new_version = get_new_version(current_version)
-    write_version(new_version, pyproject_lines)
 
-    commit_version_change(new_version)
+    if args.dry_run:
+        print(f"[dry run] New version would be {new_version}")
+    else:
+        write_version(new_version, pyproject_lines)
+        commit_version_change(new_version)
 
 
 if __name__ == "__main__":
