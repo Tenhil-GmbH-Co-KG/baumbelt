@@ -2,15 +2,21 @@ import hashlib
 import secrets
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
-DEFAULT_KEY_PREFIX = "bbt_"
-
 
 def get_key_prefix() -> str:
-    return getattr(settings, "BAUMBELT_API_TOKEN_PREFIX", DEFAULT_KEY_PREFIX)
+    """
+    Return the key prefix of this service, e.g. "itj_". It tells which service a leaked key belongs to and lets secret
+    scanners find it, so every service must set its own.
+    """
+    prefix = getattr(settings, "BAUMBELT_API_TOKEN_PREFIX", None)
+    if not prefix:
+        raise ImproperlyConfigured("Set BAUMBELT_API_TOKEN_PREFIX to the key prefix of this service, e.g. 'itj_'.")
+    return prefix
 
 
 def hash_key(key: str) -> str:

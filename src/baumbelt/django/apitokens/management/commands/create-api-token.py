@@ -2,6 +2,7 @@ from datetime import date, datetime, time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
@@ -28,6 +29,9 @@ class Command(BaseCommand):
             token.expires_at = datetime.combine(expires_at, time.min)
             if settings.USE_TZ:
                 token.expires_at = timezone.make_aware(token.expires_at)
-        key = token.set_new_key()
+        try:
+            key = token.set_new_key()
+        except ImproperlyConfigured as e:
+            raise CommandError(str(e))
         token.save()
         self.stdout.write(key)

@@ -1,11 +1,25 @@
+from django import forms
 from django.contrib import admin
+from django.core.exceptions import ImproperlyConfigured
 from django.template.response import TemplateResponse
 
-from baumbelt.django.apitokens.models import ApiToken
+from baumbelt.django.apitokens.models import ApiToken, get_key_prefix
+
+
+class ApiTokenAdminForm(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.instance._state.adding:
+            try:
+                get_key_prefix()
+            except ImproperlyConfigured as e:
+                raise forms.ValidationError(str(e))
+        return cleaned_data
 
 
 @admin.register(ApiToken)
 class ApiTokenAdmin(admin.ModelAdmin):
+    form = ApiTokenAdminForm
     list_display = ("name", "user", "created_at", "expires_at", "last_used_at")
     list_select_related = ("user",)
     search_fields = ("name",)

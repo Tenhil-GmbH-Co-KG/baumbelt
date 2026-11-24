@@ -490,10 +490,13 @@ You can also call `list_running_management_commands()` from `baumbelt.django.pro
 
 `baumbelt.django.apitokens` authenticates API clients with bearer tokens. Every client is a user of the service, and a
 user can have any number of tokens. Clients send `Authorization: Bearer <key>`. Add `"baumbelt.django.apitokens"` to
-`INSTALLED_APPS` and run `migrate` to use it.
+`INSTALLED_APPS`, set `BAUMBELT_API_TOKEN_PREFIX` and run `migrate` to use it.
 
-Only the SHA-256 hash of a key is stored, so a key can't be shown again after its creation. Keys start with `bbt_`, so
-secret scanners can find leaked keys; set `BAUMBELT_API_TOKEN_PREFIX` to change the prefix. Tokens can expire, and
+Every service must set its own key prefix, e.g. `BAUMBELT_API_TOKEN_PREFIX = "itj_"`. The prefix tells which service a
+leaked key belongs to and lets secret scanners find it. There is no default: creating a token without the setting
+fails.
+
+Only the SHA-256 hash of a key is stored, so a key can't be shown again after its creation. Tokens can expire, and
 tokens of inactive users are rejected. `last_used_at` is updated at most once per minute.
 
 ### Creating tokens

@@ -69,4 +69,4 @@
 
 - add `baumbelt.django.apitokens` app: hashed bearer tokens per user (`ApiToken`), `token_required` for plain Django
   views, `ApiTokenAuthentication`/`HasPerm` for DRF, an admin that shows new keys once and the `create-api-token`
-  command
+  command. Requires a per-service key prefix in `BAUMBELT_API_TOKEN_PREFIX`.

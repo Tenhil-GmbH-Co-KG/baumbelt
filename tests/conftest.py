@@ -39,6 +39,7 @@ def pytest_configure():
         ],
         ROOT_URLCONF="tests.urls",
         SECRET_KEY="baumbelt-tests",
+        BAUMBELT_API_TOKEN_PREFIX="test_",
         PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
         USE_TZ=True,
     )

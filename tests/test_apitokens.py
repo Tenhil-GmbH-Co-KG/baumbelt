@@ -3,6 +3,8 @@ from io import StringIO
 
 import pytest
 from django.contrib.auth.models import Permission, User
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.http import HttpResponse
@@ -43,14 +45,18 @@ class ApiTokenModelTestCase(TestCase):
     def test_stores_only_the_hash_of_the_key(self):
         token, key = create_token(User.objects.create(username="client"))
 
-        self.assertTrue(key.startswith("bbt_"))
+        self.assertTrue(key.startswith("test_"))
         self.assertEqual(token.key_hash, hash_key(key))
         self.assertNotIn(key, str(ApiToken.objects.values().get()))
 
-    @override_settings(BAUMBELT_API_TOKEN_PREFIX="itj_")
-    def test_key_prefix_is_configurable(self):
-        _token, key = create_token(User.objects.create(username="client"))
-        self.assertTrue(key.startswith("itj_"))
+    def test_requires_key_prefix_setting(self):
+        with override_settings():
+            del settings.BAUMBELT_API_TOKEN_PREFIX
+            with self.assertRaises(ImproperlyConfigured):
+                ApiToken().set_new_key()
+
+        with override_settings(BAUMBELT_API_TOKEN_PREFIX=""), self.assertRaises(ImproperlyConfigured):
+            ApiToken().set_new_key()
 
     def test_is_expired(self):
         now = timezone.now()
@@ -230,6 +236,16 @@ class ApiTokenAdminTestCase(TestCase):
         self.assertNotContains(response, key)
         self.assertNotContains(response, token.key_hash)
 
+    @override_settings(BAUMBELT_API_TOKEN_PREFIX="")
+    def test_shows_error_without_key_prefix_setting(self):
+        response = self.client.post(
+            reverse("admin:apitokens_apitoken_add"), {"user": self.client_user.pk, "name": "client secret"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Set BAUMBELT_API_TOKEN_PREFIX")
+        self.assertFalse(ApiToken.objects.exists())
+
     def test_user_is_read_only_after_creation(self):
         token, _key = create_token(self.client_user)
         other_user = User.objects.create(username="other")
@@ -254,6 +270,13 @@ class CreateApiTokenCommandTestCase(TestCase):
         token = ApiToken.objects.get(key_hash=hash_key(key))
         self.assertEqual((token.user, token.name), (user, "client secret"))
         self.assertEqual(timezone.localtime(token.expires_at).date().isoformat(), "2030-01-31")
+
+    @override_settings(BAUMBELT_API_TOKEN_PREFIX="")
+    def test_fails_without_key_prefix_setting(self):
+        User.objects.create(username="client")
+        with self.assertRaisesMessage(CommandError, "Set BAUMBELT_API_TOKEN_PREFIX"):
+            call_command("create-api-token", "client", "secret", stdout=StringIO())
+        self.assertFalse(ApiToken.objects.exists())
 
     def test_fails_for_unknown_user(self):
         with self.assertRaises(CommandError):
