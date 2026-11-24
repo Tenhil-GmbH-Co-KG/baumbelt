@@ -485,3 +485,64 @@ ssh some-ec2-instance "docker compose exec some-container ./manage.py show-runni
 `--json` prints `{"results": [{"pid": ..., "cmd_name": ..., "running_seconds": ...}, ...]}`; without it, prints one human-readable line per running command. Empty `results` means nothing is currently running.
 
 You can also call `list_running_management_commands()` from `baumbelt.django.procs.utils` directly if you need the data in Python.
+
+## apitokens [Django]
+
+`baumbelt.django.apitokens` authenticates API clients with bearer tokens. Every client is a user of the service, and a
+user can have any number of tokens. Clients send `Authorization: Bearer <key>`. Add `"baumbelt.django.apitokens"` to
+`INSTALLED_APPS`, set `BAUMBELT_API_TOKEN_PREFIX` and run `migrate` to use it.
+
+Every service must set its own key prefix, e.g. `BAUMBELT_API_TOKEN_PREFIX = "itj_"`. The prefix tells which service a
+leaked key belongs to and lets secret scanners find it. There is no default: creating a token without the setting
+fails.
+
+Only the SHA-256 hash of a key is stored, so a key can't be shown again after its creation. Tokens can expire, and
+tokens of inactive users are rejected. `last_used_at` is updated at most once per minute.
+
+### Creating tokens
+
+- In the admin under *API tokens*. The admin shows the key once after saving. It warns if the user is a staff user or
+  superuser or has a password, because such a user can also log in to the admin or with the password. Use dedicated API
+  users with password-based authentication disabled. To list the tokens of a user in your User
+  admin, add `baumbelt.django.apitokens.admin.ApiTokenInline` to its `inlines`.
+- With the management command, which prints the key:
+
+```bash
+./manage.py create-api-token some-client "k8s secret some-client-api" --expires-at 2027-12-31
+```
+
+### Django REST framework
+
+```python
+from baumbelt.django.apitokens.drf import ApiTokenAuthentication, HasPerm
+
+
+class JobView(APIView):
+    authentication_classes = (ApiTokenAuthentication,)
+    permission_classes = (HasPerm("jobs.add_job"),)
+```
+
+Requests without a bearer key are left to the other authentication classes, so `ApiTokenAuthentication` can run next
+to a legacy class during a migration. DRF puts the `authenticate_header()` of the first class into the
+`WWW-Authenticate` header of a 401. To read the key from another place too, e.g. a legacy header, override `get_key()`:
+
+```python
+class LegacyHeaderAuthentication(ApiTokenAuthentication):
+    def get_key(self, request):
+        return super().get_key(request) or request.headers.get("X-Auth-Token")
+```
+
+If `drf-spectacular` is installed, `ApiTokenAuthentication` is documented as an HTTP bearer scheme.
+
+### Plain Django views
+
+```python
+from baumbelt.django.apitokens.auth import token_required
+
+
+@token_required("alerts.add_alert")
+def ingest(request): ...
+```
+
+`token_required` responds with 401 without a valid token and with 403 without the permission. The permission is
+optional. `authenticate_bearer(request)` and `authenticate_key(key)` return the user of a valid token, or `None`.

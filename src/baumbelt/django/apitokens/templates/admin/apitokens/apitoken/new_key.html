@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; {{ token }}
+</div>
+{% endblock %}
+
+{% block content %}
+<p>The key of the API token <strong>{{ token }}</strong> of <strong>{{ token.user }}</strong> is:</p>
+<p><code style="font-size: 1.2em; user-select: all;">{{ key }}</code></p>
+<ul class="messagelist">
+  <li class="warning">Copy it now. Only its hash is stored, so it can't be shown again.</li>
+  {% for warning in user_warnings %}
+  <li class="warning">{{ warning }}</li>
+  {% endfor %}
+</ul>
+<p><a class="button" href="{% url opts|admin_urlname:'change' token.pk|admin_urlquote %}">Continue</a></p>
+{% endblock %}
