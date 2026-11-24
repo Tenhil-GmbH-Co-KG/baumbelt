@@ -1,6 +1,6 @@
 [project]
 name = "baumbelt"
-version = "1.9.1"
+version = "1.10.0"
 authors = [
     { name = "Watte", email = "python@tenhil.de" },
 ]
@@ -29,7 +29,10 @@ dev = [
     "ruff==0.11.10",
     "build==1.2.1",
     "pytest==9.1.1",
-    "twine==5.1.0"
+    "twine==5.1.0",
+    # apitokens tests
+    "djangorestframework==3.18.3",
+    "drf-spectacular==0.30.0",
 ]
 django = [
     "django>=5.0.6",

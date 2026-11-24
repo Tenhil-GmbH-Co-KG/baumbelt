@@ -64,3 +64,9 @@
 - `GracefulCommand` skips `wait_for_migrations` under a test runner — mirrors the 1.8.6 `SmartRetryHTTPAdapter` fix.
   Without it, per-`TestCase` DB isolation makes the migrate-check fail forever, blocking the command for the full 60s
   timeout.
+
+## 1.10.0
+
+- add `baumbelt.django.apitokens` app: hashed bearer tokens per user (`ApiToken`), `token_required` for plain Django
+  views, `ApiTokenAuthentication`/`HasPerm` for DRF, an admin that shows new keys once and the `create-api-token`
+  command. Requires a per-service key prefix in `BAUMBELT_API_TOKEN_PREFIX`.
