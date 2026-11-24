@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
 
+from baumbelt.django.apitokens.admin import get_user_warnings
 from baumbelt.django.apitokens.auth import authenticate_bearer, get_bearer_key, token_required
 from baumbelt.django.apitokens.drf import ApiTokenAuthentication, HasPerm
 from baumbelt.django.apitokens.models import ApiToken, hash_key
@@ -213,6 +214,33 @@ class OpenApiSchemaTestCase(TestCase):
         self.assertEqual(extension.get_security_definition(None), {"type": "http", "scheme": "bearer"})
 
 
+class GetUserWarningsTestCase(TestCase):
+    def test_no_warnings_for_plain_api_user(self):
+        user = User.objects.create(username="client")
+        user.set_unusable_password()
+        self.assertEqual(get_user_warnings(user), [])
+
+    def test_warns_about_staff_user(self):
+        user = User.objects.create(username="client", is_staff=True)
+        user.set_unusable_password()
+        warnings = get_user_warnings(user)
+        self.assertIn("The user client is a staff user and can log in to the admin.", warnings)
+        self.assertEqual(len(warnings), 2)
+
+    def test_warns_about_superuser_instead_of_staff(self):
+        user = User.objects.create(username="client", is_staff=True, is_superuser=True)
+        user.set_unusable_password()
+        warnings = get_user_warnings(user)
+        self.assertIn("The user client is a superuser, so the token has all permissions.", warnings)
+        self.assertFalse(any("staff user" in warning for warning in warnings))
+
+    def test_warns_about_usable_password(self):
+        user = User.objects.create_user(username="client", password="pw")
+        self.assertIn(
+            "The user client has a password and can log in with it, not only with the token.", get_user_warnings(user)
+        )
+
+
 class ApiTokenAdminTestCase(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(username="admin", password="pw")
@@ -245,6 +273,21 @@ class ApiTokenAdminTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Set BAUMBELT_API_TOKEN_PREFIX")
         self.assertFalse(ApiToken.objects.exists())
+
+    def test_shows_user_warnings_after_creation(self):
+        response = self.client.post(reverse("admin:apitokens_apitoken_add"), {"user": self.admin.pk, "name": "admin"})
+        self.assertContains(response, "The user admin is a superuser")
+
+    def test_no_user_warnings_for_plain_api_user(self):
+        response = self.client.post(
+            reverse("admin:apitokens_apitoken_add"), {"user": self.client_user.pk, "name": "client secret"}
+        )
+        self.assertEqual(response.context["user_warnings"], [])
+
+    def test_shows_user_warnings_on_change_page(self):
+        token, _key = create_token(self.admin)
+        response = self.client.get(reverse("admin:apitokens_apitoken_change", args=(token.pk,)))
+        self.assertContains(response, "The user admin is a superuser")
 
     def test_user_is_read_only_after_creation(self):
         token, _key = create_token(self.client_user)

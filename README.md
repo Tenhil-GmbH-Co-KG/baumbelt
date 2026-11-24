@@ -501,7 +501,9 @@ tokens of inactive users are rejected. `last_used_at` is updated at most once pe
 
 ### Creating tokens
 
-- In the admin under *API tokens*. The admin shows the key once after saving. To list the tokens of a user in your User
+- In the admin under *API tokens*. The admin shows the key once after saving. It warns if the user is a staff user or
+  superuser or has a password, because such a user can also log in to the admin or with the password. Use dedicated API
+  users with password-based authentication disabled. To list the tokens of a user in your User
   admin, add `baumbelt.django.apitokens.admin.ApiTokenInline` to its `inlines`.
 - With the management command, which prints the key:
 

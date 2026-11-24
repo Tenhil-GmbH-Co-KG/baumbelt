@@ -15,6 +15,9 @@
 <p><code style="font-size: 1.2em; user-select: all;">{{ key }}</code></p>
 <ul class="messagelist">
   <li class="warning">Copy it now. Only its hash is stored, so it can't be shown again.</li>
+  {% for warning in user_warnings %}
+  <li class="warning">{{ warning }}</li>
+  {% endfor %}
 </ul>
 <p><a class="button" href="{% url opts|admin_urlname:'change' token.pk|admin_urlquote %}">Continue</a></p>
 {% endblock %}
